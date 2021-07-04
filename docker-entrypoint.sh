@@ -1,5 +1,20 @@
 #!/bin/sh -e
 
+# postgresql URL samples
+
+# postgresql://
+# postgresql://localhost
+# postgresql://localhost:5432
+# postgresql://localhost/mydb
+# postgresql://user@localhost
+# postgresql://user:secret@localhost
+# postgresql://other@localhost/otherdb?connect_timeout=10&application_name=myapp
+# postgresql://localhost/mydb?user=other&password=secret
+wait_for_postgresql(){
+  postgresql_host=`echo $1 | cut -d '/' -f 3 | cut -d '@' -f 2 | cut -d ':' -f 1`
+  wait_for_service $postgresql_host '5432'
+}
+
 wait_for_mysql(){
   mysql_host=`echo $1 | cut -d '/' -f 3 | cut -d '@' -f 2`
   wait_for_service $mysql_host '3306'
@@ -25,8 +40,8 @@ wait_for_service(){
 }
 
 wait_for(){
-  # var should follow the follwing strructure "$service_name:$service_url_env_var_name"
-  # for instance rabbitmq:RABBITMQ_URL mysql:DATABASE_URL kafka:KAFKA_HOST
+  # var should follow the following structure "$service_name:$service_url_env_var_name"
+  # for instance rabbitmq:RABBITMQ_URL mysql:DATABASE_URL postgresql:DATABASE_URL kafka:KAFKA_HOST
 
   for var in "$@"
   do
@@ -40,6 +55,7 @@ wait_for(){
         mysql) wait_for_mysql $service_url ;;
         rabbitmq) wait_for_rabbitmq $service_url ;;
         kafka) wait_for_kafka $service_url ;;
+        postgresql) wait_for_postgresql $service_url ;;
       esac
     fi
   done
